@@ -69,6 +69,25 @@ static void skip_whitespace(t_lexer *lexer) {
   }
 }
 
+static char *norm_float(const char *raw, size_t len) {
+  if (raw[0] == '.') {
+    char *out = malloc(len + 2);
+    out[0] = '0';
+    memcpy(out + 1, raw, len);
+    out[len + 1] = '\0';
+    return out;
+  }
+
+  if (raw[len - 1] == '.') {
+    char *out = malloc(len + 2);
+    memcpy(out, raw, len);
+    out[len] = '0';
+    out[len + 1] = '\0';
+    return out;
+  }
+  return strndup(raw, len);
+}
+
 t_token l_next_tok(t_lexer *lexer) {
   t_token token;
 
@@ -81,29 +100,39 @@ t_token l_next_tok(t_lexer *lexer) {
     return token;
   }
 
-  if (c >= '0' && c <= '9') {
+  if ((c >= '0' && c <= '9') || (c == '.' && l_peek(lexer, 1) >= '0' && l_peek(lexer, 1) <= '9')) {
     size_t start = lexer->position;
     int dots = 0;
-    while (l_peek(lexer, 0) != -1) {
-      int ch = l_peek(lexer, 0);
-      // TODO: Hex support
-      if (ch >= '0' && ch <= '9') {
+
+    // integer part
+    while (l_peek(lexer, 0) >= '0' && l_peek(lexer, 0) <= '9') {
+      l_advance(lexer);
+    }
+
+    // fractional part
+    if (l_peek(lexer, 0) == '.') {
+      dots++;
+      l_advance(lexer);
+      while (l_peek(lexer, 0) >= '0' && l_peek(lexer, 0) <= '9') {
         l_advance(lexer);
-      } else if (ch == '.') {
-        dots++;
-        if (dots > 1) {
-          token.value = NULL;
-          token.kind = TOK_INVALID;
-          return token;
-        }
-        l_advance(lexer);
-      } else {
-        break;
+      }
+
+      if (l_peek(lexer, 0) == '.') {
+        l_print_error(lexer);
+        token.value = NULL;
+        token.kind = TOK_INVALID;
+        return token;
       }
     }
+
     size_t len = lexer->position - start;
+    if (dots) {
+      token.value = norm_float(&lexer->contents[start], len);
+      token.kind = TOK_FLOAT;
+      return token;
+    }
     token.value = strndup(&lexer->contents[start], len);
-    token.kind = dots ? TOK_FLOAT : TOK_INTEGER;
+    token.kind = TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/') {
     l_advance(lexer);
