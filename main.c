@@ -67,11 +67,10 @@ int main() {
 
   t_token tok;
   while ((tok = l_next_tok(lexer)).kind != TOK_EOF) {
-    t_print(lexer, &tok);
-    if (tok.kind == TOK_INVALID) {
+    if (t_print(lexer, &tok) != 0) {
       break;
     }
-    free(tok.value);
+     free(tok.value);
   }
   
   return 0;

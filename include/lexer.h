@@ -10,7 +10,8 @@ typedef enum {
   TOK_EOF      = 2,
   TOK_INVALID  = 3,
   TOK_LPAREN   = 4,
-  TOK_RPAREN   = 5
+  TOK_RPAREN   = 5,
+  TOK_FLOAT    = 6,
 } t_token_kind;
 
 typedef struct {
@@ -35,7 +36,7 @@ void l_free(t_lexer *lexer);
 
 t_token l_next_tok(t_lexer *lexer);
 
-void t_print(t_lexer *lexer, t_token *token);
+int t_print(t_lexer *lexer, t_token *token);
 
 void l_print_error(t_lexer *lexer);
 

@@ -83,12 +83,27 @@ t_token l_next_tok(t_lexer *lexer) {
 
   if (c >= '0' && c <= '9') {
     size_t start = lexer->position;
-    while (l_peek(lexer, 0) != -1 && ((l_peek(lexer, 0) >= '0' && l_peek(lexer, 0) <= '9') || l_peek(lexer, 0) == '.')) {
-      l_advance(lexer);
+    int dots = 0;
+    while (l_peek(lexer, 0) != -1) {
+      int ch = l_peek(lexer, 0);
+      // TODO: Hex support
+      if (ch >= '0' && ch <= '9') {
+        l_advance(lexer);
+      } else if (ch == '.') {
+        dots++;
+        if (dots > 1) {
+          token.value = NULL;
+          token.kind = TOK_INVALID;
+          return token;
+        }
+        l_advance(lexer);
+      } else {
+        break;
+      }
     }
     size_t len = lexer->position - start;
     token.value = strndup(&lexer->contents[start], len);
-    token.kind = TOK_INTEGER;
+    token.kind = dots ? TOK_FLOAT : TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/') {
     l_advance(lexer);
@@ -113,7 +128,7 @@ t_token l_next_tok(t_lexer *lexer) {
   return token;
 }
 
-void t_print(t_lexer *lexer, t_token *token) {
+int t_print(t_lexer *lexer, t_token *token) {
   const char *kind;
   switch (token->kind) {
   case TOK_INTEGER: kind  = "Integer"; break;
@@ -121,12 +136,14 @@ void t_print(t_lexer *lexer, t_token *token) {
   case TOK_LPAREN: kind   = "LParen"; break;
   case TOK_RPAREN: kind   = "RParen"; break;
   case TOK_EOF: kind      = "EOF"; break;
+  case TOK_FLOAT: kind    = "Float"; break;
   default: {
     l_print_error(lexer);
-    return;
+    return -1;
   }
   }
   printf("%s(%s)\n", kind, token->value ? token->value : "null");
+  return 0;
 }
 
 void l_print_error(t_lexer *lexer) {
@@ -142,5 +159,5 @@ void l_print_error(t_lexer *lexer) {
 
   fprintf(stderr, "\n%s:%zu:%zu: error: unexpected character '%c'\n", lexer->filename, lexer->line, lexer->col, lexer->contents[lexer->position]);
   fprintf(stderr, "  %.*s\n", (int)(end-start), &lexer->contents[start]);
-  fprintf(stderr, "  %*s^-----------\n", (int)(lexer->col - 2), "");
+  fprintf(stderr, "  %*s^-----------\n", (int)(lexer->col - 1), "");
 }
