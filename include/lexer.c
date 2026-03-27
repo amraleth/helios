@@ -137,6 +137,29 @@ t_token l_next_tok(t_lexer *lexer) {
     token.kind = TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+    if (c == '/' && lexer->contents[lexer->position + 1] == '/') {
+      while (lexer->contents[lexer->position] != '\0' &&
+             lexer->contents[lexer->position] != '\n') {
+        l_advance(lexer);
+      }
+      return l_next_tok(lexer);
+    }
+    
+    if (c == '/' && lexer->contents[lexer->position + 1] == '*') {
+      l_advance(lexer);
+      l_advance(lexer);
+
+      while (lexer->contents[lexer->position] != '\0') {
+        if (lexer->contents[lexer->position] == '*' &&
+            lexer->contents[lexer->position + 1] == '/') {
+          l_advance(lexer);
+          l_advance(lexer);
+          break;
+        }
+        l_advance(lexer);
+      }
+      return l_next_tok(lexer);
+    }
     l_advance(lexer);
     token.value = strndup(&lexer->contents[lexer->position - 1], 1);
     token.kind = TOK_OPERATOR;

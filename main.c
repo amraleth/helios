@@ -55,7 +55,7 @@ int main() {
   if (err != 0) {
     print_file_error(err);
     return 1;
-  }
+   }
 
   // TODO: read filename from args
   printf("Evaluating file %s:\n%s\n\n", FILENAME, file);
