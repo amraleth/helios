@@ -233,37 +233,39 @@ t_token l_next_tok(t_lexer *lexer) {
     token.value = NULL;
     token.kind  = TOK_ASSIGN;
     return token;
+  } else if (c == '@') {
+    l_advance(lexer);
+    token.value = NULL;
+    token.kind = TOK_AT;
+    return token;
   } else if (c == '"') {
+    l_advance(lexer);
     size_t start = lexer->position;
-    while (l_peek(lexer, 0) != -1) {
-      l_advance(lexer);
+
+    while (1) {
       int ch = l_peek(lexer, 0);
-      if (ch != '"') {
-        l_advance(lexer);
-      } else {
+      if (ch == -1 || ch == '\0') {
+        token.value = NULL;
+        token.kind = TOK_INVALID;
+        return token;
+      }
+      if (ch == '"') {
         break;
       }
+      l_advance(lexer);
     }
-    size_t len = lexer->position - start + 1;
+    size_t len = lexer->position - start;
     token.value = strndup(&lexer->contents[start], len);
     token.kind = TOK_STRING;
     l_advance(lexer);
     return token;
-  }
-
-  else if (match_keyword(lexer, "fn", &token)) {
+  } else if (match_keyword(lexer, "fn", &token)) {
     return token;
   }  else if (match_keyword(lexer, "let", &token)) {
     return token;
   } else if (match_keyword(lexer, "mut", &token)) {
     return token;
-  } else if (match_keyword(lexer, "@external", &token)) {
-    return token;
-  } else if (match_keyword(lexer, "@inline", &token)) {
-    return token;
-  }
-
-  else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+  } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
     size_t start = lexer->position;
     while (l_peek(lexer, 0) != -1) {
       int ch = l_peek(lexer, 0);
@@ -303,6 +305,7 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_LBRACE: kind    = "Rbrace"; break;
   case TOK_RBRACE: kind    = "Rbrace"; break;
   case TOK_STRING: kind    = "String"; break;
+  case TOK_AT: kind        = "At"; break;
   default: {
     l_print_error(lexer);
     return -1;

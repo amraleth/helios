@@ -5,7 +5,7 @@
 /* This is another comment */
 1.1 + 1 - /* idk */ .2 / 3 * (2. + 2.2) 2^^22 - 2^^2;
 
-@external printf(String format);
+@external("C") fn printf(String format);
 
 // this is a test function
 @inline fn test() {
