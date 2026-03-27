@@ -8,11 +8,25 @@
 @external("C") fn printf(String format);
 
 // this is a test function
-@inline fn test() {
+@inline fn test(): void {
    let x = 12; // immutable by default
    let mut y = 13; // explicit mutability
 
    y = x;
 
    printf("Hello, World");
+}
+
+@inline fn sum(i8 a, i8 b): i8 {
+   return a + b;
+}
+
+// this is another comment
+fn test() (void, (err, message)?) {
+   let x = sum(10, 10);
+   if (x == 100) {
+      printf("100 it is!");
+   } else {
+     printf("Hmh");
+   }
 }

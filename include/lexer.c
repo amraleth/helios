@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -116,6 +117,26 @@ static int match_keyword(t_lexer *lexer, const char *keyword, t_token *token) {
   return 1;
 }
 
+static char *l_read_alnum(t_lexer *lexer) {
+  size_t start = lexer->position;
+
+  while (isalnum((unsigned char)lexer->contents[lexer->position])) {
+    l_advance(lexer);
+  }
+
+  size_t len = lexer->position - start;
+  return strndup(&lexer->contents[start], len);
+}
+
+static t_data_type l_parse_dtype(const char *value) {
+  if (value[0] == 'i') return (t_data_type) {TYPE_INT, .width = atoi(value + 1)};
+  if (value[0] == 'u') return (t_data_type) {TYPE_UINT, .width = atoi(value + 1)};
+  if (value[0] == 'f') return (t_data_type) {TYPE_FLOAT, .width = atoi(value + 1)};
+  if (strcmp(value, "bool") == 0) return (t_data_type) {TYPE_BOOL};
+  if (strcmp(value, "void") == 0) return (t_data_type) {TYPE_VOID};
+  return (t_data_type) {TYPE_UNKNOWN};
+}
+
 t_token l_next_tok(t_lexer *lexer) {
   t_token token;
 
@@ -161,7 +182,7 @@ t_token l_next_tok(t_lexer *lexer) {
       return token;
     }
     token.value = strndup(&lexer->contents[start], len);
-    token.kind  = TOK_INTEGER;
+    token.kind = TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
     if (c == '^' && lexer->contents[lexer->position + 1] == '^') {
@@ -229,6 +250,13 @@ t_token l_next_tok(t_lexer *lexer) {
     token.kind  = TOK_RBRACE;
     return token;
   } else if (c == '=') {
+    if (l_peek(lexer, 1) == '=') {
+      l_advance(lexer);
+      l_advance(lexer);
+      token.value = NULL;
+      token.kind = TOK_EQ;
+      return token;
+    }
     l_advance(lexer);
     token.value = NULL;
     token.kind  = TOK_ASSIGN;
@@ -238,7 +266,45 @@ t_token l_next_tok(t_lexer *lexer) {
     token.value = NULL;
     token.kind = TOK_AT;
     return token;
-  } else if (c == '"') {
+  } else if (c == ':') {
+    l_advance(lexer);
+    token.value = NULL;
+    token.kind = TOK_COLON;
+    return token;
+  } else if (c == '>') {
+    token.value = NULL;
+    if (l_peek(lexer, 1) == '=') {
+      l_advance(lexer);
+      l_advance(lexer);
+      token.kind = TOK_GEQ;
+      return token;
+    }
+    l_advance(lexer);
+    token.kind = TOK_GREATER;
+    return token;
+  } else if (c == '<') {
+    token.value = NULL;
+    if (l_peek(lexer, 1) == '=') {
+      l_advance(lexer);
+      l_advance(lexer);
+      token.kind = TOK_LEQ;
+      return token;
+    }
+    l_advance(lexer);
+    token.kind = TOK_LESS;
+    return token;
+  } else if (c == ',') {
+    l_advance(lexer);
+    token.kind = TOK_COMMA;
+    token.value = NULL;
+    return token;
+  } else if (c == '?') {
+    l_advance(lexer);
+    token.kind = TOK_QUESTION;
+    token.value = NULL;
+    return token;
+  }
+  else if (c == '"') {
     l_advance(lexer);
     size_t start = lexer->position;
 
@@ -264,6 +330,16 @@ t_token l_next_tok(t_lexer *lexer) {
   }  else if (match_keyword(lexer, "let", &token)) {
     return token;
   } else if (match_keyword(lexer, "mut", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "if", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "else", &token)) {
+    return token;
+  }
+  else if ((c == 'i' || c == 'u' || c == 'f') && isdigit(lexer->contents[lexer->position + 1])) {
+    token.value = l_read_alnum(lexer);
+    token.kind = TOK_DATA_TYPE;
+    token.dtype = l_parse_dtype(token.value);
     return token;
   } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
     size_t start = lexer->position;
@@ -292,20 +368,47 @@ t_token l_next_tok(t_lexer *lexer) {
 int t_print(t_lexer *lexer, t_token *token) {
   const char *kind;
   switch (token->kind) {
-  case TOK_INTEGER: kind   = "Integer"; break;
   case TOK_OPERATOR: kind  = "Operator"; break;
   case TOK_LPAREN: kind    = "LParen"; break;
   case TOK_RPAREN: kind    = "RParen"; break;
   case TOK_EOF: kind       = "EOF"; break;
-  case TOK_FLOAT: kind     = "Float"; break;
   case TOK_SEMICOLON: kind = "Semicolon"; break;
   case TOK_KEYWORD: kind   = "Keyword"; break;
   case TOK_IDENT: kind     = "Identifier"; break;
   case TOK_ASSIGN: kind    = "Assign"; break;
-  case TOK_LBRACE: kind    = "Rbrace"; break;
+  case TOK_LBRACE: kind    = "Lbrace"; break;
   case TOK_RBRACE: kind    = "Rbrace"; break;
-  case TOK_STRING: kind    = "String"; break;
   case TOK_AT: kind        = "At"; break;
+  case TOK_COLON: kind     = "Colon"; break;
+  case TOK_INTEGER: kind   = "Integer"; break;
+  case TOK_FLOAT: kind     = "Float"; break;
+  case TOK_STRING: kind    = "String"; break;
+  case TOK_EQ: kind        = "Equals"; break;
+  case TOK_LEQ: kind       = "LessEquals"; break;
+  case TOK_GEQ: kind       = "GreaterEquals"; break;
+  case TOK_LESS: kind      = "Less"; break;
+  case TOK_GREATER: kind   = "Greater"; break;
+  case TOK_COMMA: kind     = "Comma"; break;
+  case TOK_QUESTION: kind  = "Question"; break;
+  case TOK_DATA_TYPE: {
+    const char *type_kind;
+    switch (token->dtype.kind) {
+    case TYPE_INT: type_kind     = "int"; break;
+    case TYPE_UINT: type_kind    = "uint"; break;
+    case TYPE_FLOAT: type_kind   = "float"; break;
+    case TYPE_BOOL: type_kind    = "bool"; break;
+    case TYPE_VOID: type_kind    = "void"; break;
+    case TYPE_STRING: type_kind  = "str"; break;
+    default: type_kind = "unknown"; break;
+    }
+    if (token->dtype.width) {
+      printf("DataType(%s, kind=%s, width=%d)\n", token->value, type_kind, token->dtype.width);
+      return 0;
+    } else {
+      printf("DataType(%s, kind=%s)\n", token->value, type_kind);
+      return 0;
+    }
+  }
   default: {
     l_print_error(lexer);
     return -1;

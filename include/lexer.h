@@ -5,28 +5,55 @@
 #include <string.h>
 
 typedef enum {
-  TOK_INTEGER   = 0,            // whole number
-  TOK_OPERATOR  = 1,            // +, -, /, *, ^^
-  TOK_EOF       = 2,            // end of file
-  TOK_INVALID   = 3,            // invalid token
-  TOK_LPAREN    = 4,            // (
-  TOK_RPAREN    = 5,            // )
-  TOK_FLOAT     = 6,            // floating point number
-  TOK_SEMICOLON = 7,            // ;
-  TOK_KEYWORD   = 8,            // fn, let, mut
-  TOK_IDENT     = 9,            // identifier
-  TOK_LBRACE    = 10,           // {
-  TOK_RBRACE    = 11,           // }
-  TOK_ASSIGN    = 12,           // =
-  TOK_STRING    = 13,           // string
-  TOK_AT        = 14,           // @
+  TOK_OPERATOR,                 // +, -, /, *, ^^
+  TOK_EOF,                      // end of file
+  TOK_INVALID,                  // invalid token
+  TOK_LPAREN,                   // (
+  TOK_RPAREN,                   // )
+  TOK_SEMICOLON,                // ;
+  TOK_KEYWORD,                  // fn, let, mut
+  TOK_IDENT,                    // identifier
+  TOK_LBRACE,                   // {
+  TOK_RBRACE,                   // }
+  TOK_ASSIGN,                   // =
+  TOK_AT,                       // @
+  TOK_DATA_TYPE,                // void, str, i8, i16... u8, u16... bool
+  TOK_COLON,                    // :
+  TOK_INTEGER,
+  TOK_FLOAT,
+  TOK_STRING,
+  TOK_EQ,
+  TOK_LESS,
+  TOK_LEQ,
+  TOK_GREATER,
+  TOK_GEQ,
+  TOK_COMMA,
+  TOK_QUESTION,
 } t_token_kind;
 
+typedef enum {
+  TYPE_INT,
+  TYPE_UINT,
+  TYPE_FLOAT,
+  TYPE_BOOL,
+  TYPE_VOID,
+  TYPE_STRING,
+  TYPE_UNKNOWN,
+} t_type_kind;
+
 typedef struct {
-t_token_kind  kind;
-char         *value;
-size_t        line;
-size_t        col;
+  t_type_kind kind;
+  union {
+    int width;
+  };
+} t_data_type;
+
+typedef struct {
+  t_token_kind  kind;
+  char         *value;
+  t_data_type   dtype;
+  size_t        line;
+  size_t        col;
 } t_token;
 
 typedef struct {
