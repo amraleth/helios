@@ -88,6 +88,33 @@ static char *norm_float(const char *raw, size_t len) {
   return strndup(raw, len);
 }
 
+static int match_keyword(t_lexer *lexer, const char *keyword, t_token *token) {
+  size_t len = strlen(keyword);
+  if (lexer->position + len > lexer->len) {
+    return 0;
+  }
+
+  if (strncmp(&lexer->contents[lexer->position], keyword, len) != 0) {
+    return 0;
+  }
+
+  int next = l_peek(lexer, len);
+  if (next != -1 && (next >= 'a' && next <= 'z' ||
+                     next >= 'A' && next <= 'Z' ||
+                     next >= '0' && next <= '9' ||
+                     next == '_')) {
+    return 0;
+  }
+
+  for (size_t i = 0; i < len; i++) {
+    l_advance(lexer);
+  }
+
+  token->value = strdup(keyword);
+  token->kind = TOK_KEYWORD;
+  return 1;
+}
+
 t_token l_next_tok(t_lexer *lexer) {
   t_token token;
 
@@ -191,10 +218,38 @@ t_token l_next_tok(t_lexer *lexer) {
     token.value = NULL;
     token.kind = TOK_SEMICOLON;
     return token;
+  } else if (c == '{') {
+    l_advance(lexer);
+    token.value = NULL;
+    token.kind = TOK_LBRACE;
+    return token;
+  } else if (c == '}') {
+    l_advance(lexer);
+    token.value = NULL;
+    token.kind = TOK_RBRACE;
+    return token;
+  } else if (match_keyword(lexer, "fn", &token)) {
+    return token;
+  } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+    size_t start = lexer->position;
+    while (l_peek(lexer, 0) != -1) {
+      int ch = l_peek(lexer, 0);
+      if ((ch >= 'a' && ch <= 'z') ||
+          (ch >= 'A' && ch <= 'Z') ||
+          (ch >= '0' && ch <= '9') ||
+          ch == '_') {
+        l_advance(lexer);
+      } else {
+        break;
+      }
+    }
+    size_t len = lexer->position - start;
+    token.value = strndup(&lexer->contents[start], len);
+    token.kind = TOK_IDENT;
+    return token;
   }
-
   l_advance(lexer);
-  token.kind = TOK_INVALID;
+  token.kind = TOK_IDENT;
   token.value = NULL;
   return token;
 }
@@ -209,6 +264,8 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_EOF: kind       = "EOF"; break;
   case TOK_FLOAT: kind     = "Float"; break;
   case TOK_SEMICOLON: kind = "Semicolon"; break;
+  case TOK_KEYWORD: kind = "Keyword"; break;
+  case TOK_IDENT: kind = "Identifier"; break;
   default: {
     l_print_error(lexer);
     return -1;
