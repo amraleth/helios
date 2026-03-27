@@ -29,6 +29,8 @@ typedef enum {
   TOK_GEQ,
   TOK_COMMA,
   TOK_QUESTION,
+  TOK_PP,
+  TOK_DOT,
 } t_token_kind;
 
 typedef enum {

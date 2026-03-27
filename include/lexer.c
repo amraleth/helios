@@ -185,6 +185,13 @@ t_token l_next_tok(t_lexer *lexer) {
     token.kind = TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
+    if (c == '+' && l_peek(lexer, 1) == '+') {
+      l_advance(lexer);
+      l_advance(lexer);
+      token.value = NULL;
+      token.kind = TOK_PP;
+      return token;
+    }
     if (c == '^' && lexer->contents[lexer->position + 1] == '^') {
       l_advance(lexer);
       l_advance(lexer);
@@ -261,11 +268,6 @@ t_token l_next_tok(t_lexer *lexer) {
     token.value = NULL;
     token.kind  = TOK_ASSIGN;
     return token;
-  } else if (c == '@') {
-    l_advance(lexer);
-    token.value = NULL;
-    token.kind = TOK_AT;
-    return token;
   } else if (c == ':') {
     l_advance(lexer);
     token.value = NULL;
@@ -303,6 +305,11 @@ t_token l_next_tok(t_lexer *lexer) {
     token.kind = TOK_QUESTION;
     token.value = NULL;
     return token;
+  } else if (c == '.') {
+    l_advance(lexer);
+    token.kind = TOK_DOT;
+    token.value = NULL;
+    return token;
   }
   else if (c == '"') {
     l_advance(lexer);
@@ -334,6 +341,16 @@ t_token l_next_tok(t_lexer *lexer) {
   } else if (match_keyword(lexer, "if", &token)) {
     return token;
   } else if (match_keyword(lexer, "else", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "struct", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "for", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "interface", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "@inline", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "@external", &token)) {
     return token;
   }
   else if ((c == 'i' || c == 'u' || c == 'f') && isdigit(lexer->contents[lexer->position + 1])) {
@@ -390,6 +407,8 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_GREATER: kind   = "Greater"; break;
   case TOK_COMMA: kind     = "Comma"; break;
   case TOK_QUESTION: kind  = "Question"; break;
+  case TOK_PP: kind = "PlusPlus"; break;
+  case TOK_DOT: kind = "Dot"; break;
   case TOK_DATA_TYPE: {
     const char *type_kind;
     switch (token->dtype.kind) {
