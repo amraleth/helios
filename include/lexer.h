@@ -5,20 +5,21 @@
 #include <string.h>
 
 typedef enum {
-  TOK_INTEGER  = 0,
-  TOK_OPERATOR = 1,
-  TOK_EOF      = 2,
-  TOK_INVALID  = 3,
-  TOK_LPAREN   = 4,
-  TOK_RPAREN   = 5,
-  TOK_FLOAT    = 6,
+  TOK_INTEGER   = 0,            // whole number
+  TOK_OPERATOR  = 1,            // +, -, /, *, ^^
+  TOK_EOF       = 2,            // end of file
+  TOK_INVALID   = 3,            // invalid token
+  TOK_LPAREN    = 4,            // (
+  TOK_RPAREN    = 5,            // )
+  TOK_FLOAT     = 6,            // floating point number
+  TOK_SEMICOLON = 7,            // ;
 } t_token_kind;
 
 typedef struct {
-  t_token_kind  kind;
-  char         *value;
-  size_t        line;
-  size_t        col;
+t_token_kind  kind;
+char         *value;
+size_t        line;
+size_t        col;
 } t_token;
 
 typedef struct {
