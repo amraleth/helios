@@ -69,6 +69,7 @@ static void skip_whitespace(t_lexer *lexer) {
   }
 }
 
+// supported float variants are 0. , 0.0 and .0
 static char *norm_float(const char *raw, size_t len) {
   if (raw[0] == '.') {
     char *out = malloc(len + 2);
@@ -111,7 +112,7 @@ static int match_keyword(t_lexer *lexer, const char *keyword, t_token *token) {
   }
 
   token->value = strdup(keyword);
-  token->kind = TOK_KEYWORD;
+  token->kind  = TOK_KEYWORD;
   return 1;
 }
 
@@ -122,7 +123,7 @@ t_token l_next_tok(t_lexer *lexer) {
 
   int c = l_peek(lexer, 0);
   if (c == -1) {
-    token.kind = TOK_EOF;
+    token.kind  = TOK_EOF;
     token.value = NULL;
     return token;
   }
@@ -148,7 +149,7 @@ t_token l_next_tok(t_lexer *lexer) {
       // TODO: could also be an identifier
       if (l_peek(lexer, 0) == '.') {
         token.value = NULL;
-        token.kind = TOK_INVALID;
+        token.kind  = TOK_INVALID;
         return token;
       }
     }
@@ -156,23 +157,23 @@ t_token l_next_tok(t_lexer *lexer) {
     size_t len = lexer->position - start;
     if (dots) {
       token.value = norm_float(&lexer->contents[start], len);
-      token.kind = TOK_FLOAT;
+      token.kind  = TOK_FLOAT;
       return token;
     }
     token.value = strndup(&lexer->contents[start], len);
-    token.kind = TOK_INTEGER;
+    token.kind  = TOK_INTEGER;
     return token;
   } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
     if (c == '^' && lexer->contents[lexer->position + 1] == '^') {
       l_advance(lexer);
       l_advance(lexer);
       token.value = strndup(&lexer->contents[lexer->position - 2], 2);
-      token.kind = TOK_OPERATOR;
+      token.kind  = TOK_OPERATOR;
       return token;
     } else if (c == '^') {
       l_advance(lexer);
       token.value = NULL;
-      token.kind = TOK_INVALID;
+      token.kind  = TOK_INVALID;
       return token;
     }
     if (c == '/' && lexer->contents[lexer->position + 1] == '/') {
@@ -200,43 +201,65 @@ t_token l_next_tok(t_lexer *lexer) {
     }
     l_advance(lexer);
     token.value = strndup(&lexer->contents[lexer->position - 1], 1);
-    token.kind = TOK_OPERATOR;
+    token.kind  = TOK_OPERATOR;
     return token;
   } else if (c == '(') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_LPAREN;
+    token.kind  = TOK_LPAREN;
     return token;
   } else if (c == ')') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_RPAREN;
+    token.kind  = TOK_RPAREN;
     return token;
   } else if (c == ';') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_SEMICOLON;
+    token.kind  = TOK_SEMICOLON;
     return token;
   } else if (c == '{') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_LBRACE;
+    token.kind  = TOK_LBRACE;
     return token;
   } else if (c == '}') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_RBRACE;
+    token.kind  = TOK_RBRACE;
     return token;
   } else if (c == '=') {
     l_advance(lexer);
     token.value = NULL;
-    token.kind = TOK_ASSIGN;
+    token.kind  = TOK_ASSIGN;
     return token;
-  } else if (match_keyword(lexer, "fn", &token)) {
+  } else if (c == '"') {
+    size_t start = lexer->position;
+    while (l_peek(lexer, 0) != -1) {
+      l_advance(lexer);
+      int ch = l_peek(lexer, 0);
+      if (ch != '"') {
+        l_advance(lexer);
+      } else {
+        break;
+      }
+    }
+    size_t len = lexer->position - start + 1;
+    token.value = strndup(&lexer->contents[start], len);
+    token.kind = TOK_STRING;
+    l_advance(lexer);
+    return token;
+  }
+
+  else if (match_keyword(lexer, "fn", &token)) {
     return token;
   }  else if (match_keyword(lexer, "let", &token)) {
     return token;
   } else if (match_keyword(lexer, "mut", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "@external", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "@inline", &token)) {
     return token;
   }
 
@@ -255,11 +278,11 @@ t_token l_next_tok(t_lexer *lexer) {
     }
     size_t len = lexer->position - start;
     token.value = strndup(&lexer->contents[start], len);
-    token.kind = TOK_IDENT;
+    token.kind  = TOK_IDENT;
     return token;
   }
   l_advance(lexer);
-  token.kind = TOK_INVALID;
+  token.kind  = TOK_INVALID;
   token.value = NULL;
   return token;
 }
@@ -274,11 +297,12 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_EOF: kind       = "EOF"; break;
   case TOK_FLOAT: kind     = "Float"; break;
   case TOK_SEMICOLON: kind = "Semicolon"; break;
-  case TOK_KEYWORD: kind = "Keyword"; break;
-  case TOK_IDENT: kind = "Identifier"; break;
-  case TOK_ASSIGN: kind = "Assign"; break;
-  case TOK_LBRACE: kind = "Rbrace"; break;
-  case TOK_RBRACE: kind = "Rbrace"; break;
+  case TOK_KEYWORD: kind   = "Keyword"; break;
+  case TOK_IDENT: kind     = "Identifier"; break;
+  case TOK_ASSIGN: kind    = "Assign"; break;
+  case TOK_LBRACE: kind    = "Rbrace"; break;
+  case TOK_RBRACE: kind    = "Rbrace"; break;
+  case TOK_STRING: kind    = "String"; break;
   default: {
     l_print_error(lexer);
     return -1;

@@ -18,6 +18,7 @@ typedef enum {
   TOK_LBRACE    = 10,           // {
   TOK_RBRACE    = 11,           // }
   TOK_ASSIGN    = 12,           // =
+  TOK_STRING    = 13,           // string
 } t_token_kind;
 
 typedef struct {

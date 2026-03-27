@@ -5,8 +5,14 @@
 /* This is another comment */
 1.1 + 1 - /* idk */ .2 / 3 * (2. + 2.2) 2^^22 - 2^^2;
 
+@external printf(String format);
+
 // this is a test function
-fn test() {
+@inline fn test() {
    let x = 12; // immutable by default
    let mut y = 13; // explicit mutability
+
+   y = x;
+
+   printf("Hello, World");
 }
