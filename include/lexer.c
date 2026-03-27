@@ -395,7 +395,6 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_ASSIGN: kind    = "Assign"; break;
   case TOK_LBRACE: kind    = "Lbrace"; break;
   case TOK_RBRACE: kind    = "Rbrace"; break;
-  case TOK_AT: kind        = "At"; break;
   case TOK_COLON: kind     = "Colon"; break;
   case TOK_INTEGER: kind   = "Integer"; break;
   case TOK_FLOAT: kind     = "Float"; break;

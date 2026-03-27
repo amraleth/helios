@@ -16,7 +16,6 @@ typedef enum {
   TOK_LBRACE,                   // {
   TOK_RBRACE,                   // }
   TOK_ASSIGN,                   // =
-  TOK_AT,                       // @
   TOK_DATA_TYPE,                // void, str, i8, i16... u8, u16... bool
   TOK_COLON,                    // :
   TOK_INTEGER,
