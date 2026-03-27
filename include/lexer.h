@@ -13,10 +13,11 @@ typedef enum {
   TOK_RPAREN    = 5,            // )
   TOK_FLOAT     = 6,            // floating point number
   TOK_SEMICOLON = 7,            // ;
-  TOK_KEYWORD   = 8,            // fn
+  TOK_KEYWORD   = 8,            // fn, let, mut
   TOK_IDENT     = 9,            // identifier
   TOK_LBRACE    = 10,           // {
   TOK_RBRACE    = 11,           // }
+  TOK_ASSIGN    = 12,           // =
 } t_token_kind;
 
 typedef struct {

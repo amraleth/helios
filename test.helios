@@ -7,4 +7,6 @@
 
 // this is a test function
 fn test() {
+   let x = 12; // immutable by default
+   let mut y = 13; // explicit mutability
 }

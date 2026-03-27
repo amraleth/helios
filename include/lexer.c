@@ -147,7 +147,6 @@ t_token l_next_tok(t_lexer *lexer) {
 
       // TODO: could also be an identifier
       if (l_peek(lexer, 0) == '.') {
-        l_print_error(lexer);
         token.value = NULL;
         token.kind = TOK_INVALID;
         return token;
@@ -228,9 +227,20 @@ t_token l_next_tok(t_lexer *lexer) {
     token.value = NULL;
     token.kind = TOK_RBRACE;
     return token;
+  } else if (c == '=') {
+    l_advance(lexer);
+    token.value = NULL;
+    token.kind = TOK_ASSIGN;
+    return token;
   } else if (match_keyword(lexer, "fn", &token)) {
     return token;
-  } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+  }  else if (match_keyword(lexer, "let", &token)) {
+    return token;
+  } else if (match_keyword(lexer, "mut", &token)) {
+    return token;
+  }
+
+  else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
     size_t start = lexer->position;
     while (l_peek(lexer, 0) != -1) {
       int ch = l_peek(lexer, 0);
@@ -249,7 +259,7 @@ t_token l_next_tok(t_lexer *lexer) {
     return token;
   }
   l_advance(lexer);
-  token.kind = TOK_IDENT;
+  token.kind = TOK_INVALID;
   token.value = NULL;
   return token;
 }
@@ -266,6 +276,9 @@ int t_print(t_lexer *lexer, t_token *token) {
   case TOK_SEMICOLON: kind = "Semicolon"; break;
   case TOK_KEYWORD: kind = "Keyword"; break;
   case TOK_IDENT: kind = "Identifier"; break;
+  case TOK_ASSIGN: kind = "Assign"; break;
+  case TOK_LBRACE: kind = "Rbrace"; break;
+  case TOK_RBRACE: kind = "Rbrace"; break;
   default: {
     l_print_error(lexer);
     return -1;
