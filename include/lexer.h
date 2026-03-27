@@ -23,7 +23,7 @@ typedef struct {
 
 typedef struct {
   char*  contents;
-  char* filename;
+  char*  filename;
   size_t len;
   size_t position;
   size_t line;

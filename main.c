@@ -3,7 +3,7 @@
 
 #include "include/lexer.h"
 
-const char* FILENAME = "test.helios";
+char* FILENAME = "test.helios";
 
 enum file_op_error {
   SUCCESS        = 0,
@@ -57,6 +57,7 @@ int main() {
     return 1;
   }
 
+  // TODO: read filename from args
   printf("Evaluating file %s:\n%s\n\n", FILENAME, file);
 
   t_lexer *lexer = l_create(FILENAME, file);

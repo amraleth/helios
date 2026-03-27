@@ -104,6 +104,7 @@ t_token l_next_tok(t_lexer *lexer) {
     size_t start = lexer->position;
     int dots = 0;
 
+    // TODO: support for hex integers
     // integer part
     while (l_peek(lexer, 0) >= '0' && l_peek(lexer, 0) <= '9') {
       l_advance(lexer);
@@ -117,6 +118,7 @@ t_token l_next_tok(t_lexer *lexer) {
         l_advance(lexer);
       }
 
+      // TODO: could also be an identifier
       if (l_peek(lexer, 0) == '.') {
         l_print_error(lexer);
         token.value = NULL;
