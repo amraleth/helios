@@ -5,7 +5,7 @@
 #include "include/lexer.h"
 #include "include/parser.h"
 
-char* FILENAME = "test.helios";
+char* FILENAME = "example/test.helios";
 
 enum file_op_error {
   SUCCESS        = 0,
