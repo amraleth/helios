@@ -1,0 +1,2 @@
+*.helios linguist-language=Rust
+*.helios linguist-detectable=false
