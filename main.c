@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "include/ast.h"
 #include "include/lexer.h"
+#include "include/parser.h"
 
 char* FILENAME = "test.helios";
 
@@ -23,7 +25,7 @@ void print_file_error(int i) {
 
 int read_file(const char** out, const char* filename) {
   char *buffer;
-  long len;
+  size_t len;
   FILE *f = fopen(filename, "r");
 
   if (!f) {
@@ -55,24 +57,29 @@ int main() {
   if (err != 0) {
     print_file_error(err);
     return 1;
-   }
+  }
 
   // TODO: read filename from args
   printf("Evaluating file %s:\n%s\n\n", FILENAME, file);
 
   t_lexer *lexer = l_create(FILENAME, file);
   if (!lexer) {
-    printf("Failed to create lexer for \n %s", file);
+    printf("Failed to create lexer for \n '%s'", file);
     return 1;
   }
 
-  t_token tok;
-  while ((tok = l_next_tok(lexer)).kind != TOK_EOF) {
-    if (t_print(lexer, &tok) != 0) {
-      break;
-    }
-     free(tok.value);
+  t_parser *parser = p_create(lexer);
+  if (!parser) {
+    printf("Failed to create parser\n");
+    l_free(lexer);
+    return 1;
   }
-  
+
+  t_node *tree = p_parse_expression(parser);
+  node_print(tree);
+
+  free(parser);
+  l_free(lexer);
+  free((void *)file);
   return 0;
 }

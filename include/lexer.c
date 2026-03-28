@@ -22,7 +22,7 @@ t_lexer *l_create(char* filename, const char* contents) {
   lexer->len      = strlen(lexer->contents);
   lexer->col      = 1;
   lexer->line     = 1;
-  lexer->filename = filename;
+  lexer->filename = strdup(filename);
 
   return lexer;
 }
@@ -39,10 +39,6 @@ static int l_peek(t_lexer *lexer, size_t offset) {
     return -1;
   }
   return lexer->contents[pos];
-}
-
-static int l_expect(t_lexer *lexer, char exp) {
-  return l_peek(lexer, 0) == exp;
 }
 
 static int l_advance(t_lexer *lexer) {
@@ -101,9 +97,9 @@ static int match_keyword(t_lexer *lexer, const char *keyword, t_token *token) {
   }
 
   int next = l_peek(lexer, len);
-  if (next != -1 && (next >= 'a' && next <= 'z' ||
-                     next >= 'A' && next <= 'Z' ||
-                     next >= '0' && next <= '9' ||
+  if (next != -1 && ((next >= 'a' && next <= 'z') ||
+                     (next >= 'A' && next <= 'Z') ||
+                     (next >= '0' && next <= '9') ||
                      next == '_')) {
     return 0;
   }
@@ -132,15 +128,18 @@ static t_data_type l_parse_dtype(const char *value) {
   if (value[0] == 'i') return (t_data_type) {TYPE_INT, .width = atoi(value + 1)};
   if (value[0] == 'u') return (t_data_type) {TYPE_UINT, .width = atoi(value + 1)};
   if (value[0] == 'f') return (t_data_type) {TYPE_FLOAT, .width = atoi(value + 1)};
-  if (strcmp(value, "bool") == 0) return (t_data_type) {TYPE_BOOL};
-  if (strcmp(value, "void") == 0) return (t_data_type) {TYPE_VOID};
-  return (t_data_type) {TYPE_UNKNOWN};
+  if (strcmp(value, "bool") == 0) return (t_data_type) {TYPE_BOOL, .width = 0};
+  if (strcmp(value, "void") == 0) return (t_data_type) {TYPE_VOID, .width = 0};
+  return (t_data_type) {TYPE_UNKNOWN, .width = 0};
 }
 
 t_token l_next_tok(t_lexer *lexer) {
   t_token token;
 
   skip_whitespace(lexer);
+
+  token.line = lexer->line;
+  token.col  = lexer->col;
 
   int c = l_peek(lexer, 0);
   if (c == -1) {
